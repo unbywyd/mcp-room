@@ -1,0 +1,49 @@
+{
+  "name": "@tscodex/room",
+  "version": "0.1.0",
+  "description": "Shared rooms for Claude chats — talk across machines and pick up a conversation in a new chat. End-to-end encrypted.",
+  "type": "module",
+  "bin": {
+    "tscodex-room": "dist/index.js"
+  },
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "keywords": [
+    "mcp",
+    "claude",
+    "model-context-protocol",
+    "chat",
+    "encrypted"
+  ],
+  "author": {
+    "name": "unbywyd",
+    "url": "https://unbywyd.com"
+  },
+  "homepage": "https://tscodex.com",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.1",
+    "typescript": "^5.9.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/unbywyd/mcp-room.git"
+  },
+  "bugs": {
+    "url": "https://github.com/unbywyd/mcp-room/issues"
+  }
+}
