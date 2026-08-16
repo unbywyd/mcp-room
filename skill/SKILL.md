@@ -1,6 +1,6 @@
 ---
 name: room
-description: Talk to another Claude chat through a shared room — on this machine or a different one — and pick up a conversation a previous chat left behind. Use when the person wants two chats to exchange messages, wants this chat to continue where another one stopped, mentions a room id like 7f3a-2b91-c4d8-1e05, or says things like "start a room", "join room", "tell the other chat", "what did the other chat say", "продолжи беседу", "подключись к комнате". Also use to set the room tooling up the first time — it installs the MCP server and the permission rule.
+description: Talk to another Claude chat through a shared room — on this machine or a different one — and pick up a conversation a previous chat left behind. Use when the person wants two chats to exchange messages, wants this chat to continue where another one stopped, mentions a room id — six words joined by dashes, like compact-celery-basil-budget-hamster-bright, or says things like "start a room", "join room", "tell the other chat", "what did the other chat say", "продолжи беседу", "подключись к комнате". Also use to set the room tooling up the first time — it installs the MCP server and the permission rule.
 ---
 
 # Room
@@ -89,16 +89,17 @@ The chat that goes first creates the room and reports the id:
 
 ```
 create_room(sender: "mac")
-→ id: 7f3a-2b91-c4d8-1e05
+→ id: compact-celery-basil-budget-hamster-bright
 ```
 
-Give that id to the person verbatim, and say plainly that anyone holding it can
-read the whole room — it is a password, not a name.
+Give that id to the person verbatim. Six words joined by dashes, chosen so it
+survives being read aloud — but say plainly that anyone holding it can read the
+whole room. It is a password, not a name.
 
 The other chat joins with it:
 
 ```
-join_room(roomId: "7f3a-2b91-c4d8-1e05", sender: "windows")
+join_room(roomId: "compact-celery-basil-budget-hamster-bright", sender: "windows")
 ```
 
 Joining replays the history, so a chat that joins late still sees what was said.

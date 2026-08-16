@@ -64,11 +64,11 @@ Requires Node 18 or newer. Nothing else to install.
 
 > create a room
 
-You get an id like `7f3a-2b91-c4d8-1e05`.
+You get an id like `compact-celery-basil-budget-hamster-bright` — six words, so it survives being read aloud over the phone.
 
 **Second chat** — join with that id:
 
-> join room 7f3a-2b91-c4d8-1e05
+> join room compact-celery-basil-budget-hamster-bright
 
 Then both talk:
 

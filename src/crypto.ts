@@ -7,15 +7,26 @@
  * беседу, восстановить её неоткуда.
  */
 
-import { createHash, createCipheriv, createDecipheriv, hkdfSync, randomBytes } from 'node:crypto'
+import { createHash, createCipheriv, createDecipheriv, hkdfSync, randomBytes, randomInt } from 'node:crypto'
+import { WORDS } from './wordlist.js'
 
 /** Длина вектора инициализации для AES-GCM: 96 бит — размер, под который он спроектирован. */
 const NONCE_BYTES = 12
 
-/** Идентификатор: 64 бита в hex, разбитые дефисами. Перебору не поддаётся. */
+/**
+ * Идентификатор комнаты — шесть слов через дефис.
+ *
+ * Словами, а не hex: идентификатор диктуют вслух и набирают на другой машине,
+ * а «4130-ab7b-8d0c-e352» на слух передать почти невозможно. Шесть слов из
+ * словаря в 1024 дают 60 бит — перебор занял бы тысячи лет даже при миллионе
+ * попыток в секунду, а это важно: идентификатор здесь и есть ключ шифрования.
+ *
+ * randomInt, а не randomBytes с остатком от деления: остаток сместил бы
+ * распределение к началу словаря, и заявленная стойкость перестала бы быть
+ * правдой.
+ */
 export function newRoomId(): string {
-  const hex = randomBytes(8).toString('hex')
-  return hex.match(/.{4}/g)!.join('-')
+  return Array.from({ length: 6 }, () => WORDS[randomInt(WORDS.length)]).join('-')
 }
 
 /** Ключ владельца — отдельный секрет: право читать и право удалить это разные вещи. */
