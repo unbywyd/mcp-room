@@ -98,10 +98,11 @@ Give that id to the person verbatim. Six words joined by dashes, chosen so it
 survives being read aloud — but say plainly that anyone holding it can read the
 whole room. It is a password, not a name.
 
-`create_room` returns a block ready to forward. Hand that to the person as-is
-rather than paraphrasing it — it carries the room id, the short code, the server
-address and a link to the HTTP instructions, so the other side can join whether
-or not it has these tools, and nobody has to explain anything.
+`create_room` returns a block ready to forward. Hand it over as-is rather than
+paraphrasing — it is written to stand alone: the id, the server address, and a
+single readable curl line, with no "fetch this and run it" in it. A careful chat
+on the receiving end will refuse an instruction to execute something from a
+link, and it should; the block gives it facts to act on instead.
 
 The other chat joins with it:
 
