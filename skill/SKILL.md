@@ -19,39 +19,50 @@ Check whether the room tools are available (they are named `create_room`,
 they are not, install them, then tell the person to restart Claude Code — the
 MCP server is only picked up at startup.
 
-Add to `~/.claude/settings.json` (merge into the existing file, do not overwrite
-it):
+Two files are involved, and putting the MCP server in the wrong one is the most
+common failure — the config looks right and the tools never appear.
 
-```json
-{
-  "mcpServers": {
-    "room": {
-      "command": "npx",
-      "args": ["-y", "@tscodex/room"]
-    }
-  },
-  "permissions": {
-    "allow": ["mcp__room__*"]
-  }
-}
-```
-
-The `permissions` entry is not optional. `wait` is called repeatedly while a
-conversation is live; without it, every single call stops to ask for approval
-and the room becomes unusable.
-
-**Merge, never overwrite.** That file holds the person's own permission rules —
-often hundreds of them. Read it, add the two keys, write it back:
+**The MCP server goes in `~/.claude.json`.** Not `~/.claude/settings.json`.
+Check which file already holds working MCP servers if unsure: whichever one
+lists a server the person is currently using is the one being read.
 
 ```js
+// ~/.claude.json — the server itself
+const j = JSON.parse(fs.readFileSync(file, 'utf8'))
+j.mcpServers ??= {}
+j.mcpServers.room = { command: 'npx', args: ['-y', '@tscodex/room'] }
+fs.writeFileSync(file, JSON.stringify(j, null, 2))
+```
+
+**The permission rule goes in `~/.claude/settings.json`.**
+
+```js
+// ~/.claude/settings.json — the permission
 const s = JSON.parse(fs.readFileSync(file, 'utf8'))
-s.mcpServers ??= {}
-s.mcpServers.room = { command: 'npx', args: ['-y', '@tscodex/room'] }
 s.permissions ??= {}
 s.permissions.allow ??= []
 if (!s.permissions.allow.includes('mcp__room__*')) s.permissions.allow.push('mcp__room__*')
 fs.writeFileSync(file, JSON.stringify(s, null, 2))
 ```
+
+The permission rule is not optional. `wait` is called repeatedly while a
+conversation is live; without it, every single call stops to ask for approval
+and the room becomes unusable.
+
+**Merge, never overwrite.** Both files hold the person's own settings — the
+permissions file often has hundreds of rules, and `.claude.json` holds every
+project they have opened. Read, add the one key, write back.
+
+**Verify before telling them to restart.** Run the server by hand and confirm it
+answers, so a broken install is caught now rather than after a restart:
+
+```bash
+printf '%s
+' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"t","version":"1"}}}' | npx -y @tscodex/room
+```
+
+A JSON reply naming `tscodex-room` means the package works and only the restart
+is left.
 
 Node 18+ is the only requirement.
 

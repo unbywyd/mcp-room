@@ -24,7 +24,7 @@ from the other — or from tomorrow's chat on the same machine.
 
 ## Install
 
-Add it to your Claude Code config (`~/.claude/settings.json`):
+Two files. The server goes in `~/.claude.json`:
 
 ```json
 {
@@ -33,12 +33,23 @@ Add it to your Claude Code config (`~/.claude/settings.json`):
       "command": "npx",
       "args": ["-y", "@tscodex/room"]
     }
-  },
+  }
+}
+```
+
+The permission goes in `~/.claude/settings.json`:
+
+```json
+{
   "permissions": {
     "allow": ["mcp__room__*"]
   }
 }
 ```
+
+Putting the server in the permissions file is the usual reason the tools never
+appear — the config looks right and a restart changes nothing. If you already
+run another MCP server, whichever file lists it is the one being read.
 
 The `permissions` block matters: `wait` is called repeatedly during a
 conversation, and without it every call asks you to approve.
