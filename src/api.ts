@@ -80,13 +80,18 @@ export function waitForMessages(roomId: string, since: number) {
   )
 }
 
-export function deleteRoom(roomId: string, ownerKey: string) {
+export function deleteRoom(roomId: string) {
   return call<{ ok: true }>(
     '',
-    {
-      method: 'DELETE',
-      body: JSON.stringify({ idHash: sha256(roomId), ownerKeyHash: sha256(ownerKey) }),
-    },
+    { method: 'DELETE', body: JSON.stringify({ idHash: sha256(roomId) }) },
+    NORMAL_TIMEOUT_MS,
+  )
+}
+
+export function fetchMembers(roomId: string) {
+  return call<{ members: { sender: string; messages: number; lastAt: string }[] }>(
+    `/members?idHash=${sha256(roomId)}`,
+    { method: 'GET' },
     NORMAL_TIMEOUT_MS,
   )
 }
