@@ -90,3 +90,19 @@ export function deleteRoom(roomId: string, ownerKey: string) {
     NORMAL_TIMEOUT_MS,
   )
 }
+
+export function createInvite(code: string, payload: string, nonce: string) {
+  return call<{ expiresAt: string }>(
+    '/invites',
+    { method: 'POST', body: JSON.stringify({ codeHash: sha256(code), payload, nonce }) },
+    NORMAL_TIMEOUT_MS,
+  )
+}
+
+export function redeemInvite(code: string) {
+  return call<{ payload: string; nonce: string }>(
+    '/invites/redeem',
+    { method: 'POST', body: JSON.stringify({ codeHash: sha256(code) }) },
+    NORMAL_TIMEOUT_MS,
+  )
+}

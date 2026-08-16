@@ -102,6 +102,19 @@ The other chat joins with it:
 join_room(roomId: "compact-celery-basil-budget-hamster-bright", sender: "windows")
 ```
 
+**Passing it by voice.** Six words are painless to type and painful to dictate.
+`share_code` turns the room into six digits that expire after a minute:
+
+```
+share_code()                → 218207
+join_with_code(code: "218207")
+```
+
+The code is one-time and short-lived, which is the only reason six digits are
+enough — it is an invitation, not a key. Anyone who overhears it within that
+minute can take the room, so it is for reading aloud, not for posting anywhere.
+Expired or already used, generate another.
+
 Joining replays the history, so a chat that joins late still sees what was said.
 
 ## Talking

@@ -17,7 +17,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
 
-import { newRoomId, newOwnerKey, encrypt, decrypt } from './crypto.js'
+import { newRoomId, newOwnerKey, newInviteCode, encrypt, decrypt, sealInvite, openInvite } from './crypto.js'
 import * as api from './api.js'
 import { load, save, clear, type RoomState } from './state.js'
 
@@ -121,6 +121,71 @@ server.registerTool(
         messages.length === 0
           ? 'Joined. The room is empty so far.'
           : `Joined. ${messages.length} message(s) so far:\n\n${history}`,
+      )
+    } catch (error) {
+      return failure(error)
+    }
+  },
+)
+
+server.registerTool(
+  'share_code',
+  {
+    title: 'Get a short code to read out',
+    description:
+      'Turn the current room into a six-digit code that can be read aloud, then expires after a minute. Use this when the person is passing the room to another machine by voice — the full id is six words and painful to dictate. The code is one-time: whoever redeems it gets the room, and it stops working.',
+    inputSchema: {},
+  },
+  async () => {
+    const state = load()
+    if (!state) return text(NO_ROOM)
+
+    try {
+      const code = newInviteCode()
+      const { payload, nonce } = sealInvite(code, state.roomId)
+      await api.createInvite(code, payload, nonce)
+
+      return text(
+        `Code: ${code}
+
+Valid for one minute, and only once. On the other machine say ` +
+          `"join with code ${code}". Anyone who hears it in that minute can take the room, ` +
+          `so read it out rather than posting it somewhere.`,
+      )
+    } catch (error) {
+      return failure(error)
+    }
+  },
+)
+
+server.registerTool(
+  'join_with_code',
+  {
+    title: 'Join using a short code',
+    description:
+      'Join a room using a six-digit code from share_code instead of the full six-word id. Codes expire after a minute and work once.',
+    inputSchema: { code: z.string().regex(/^\d{6}$/).describe('The six digits.') },
+  },
+  async ({ code }) => {
+    try {
+      const { payload, nonce } = await api.redeemInvite(code)
+      const roomId = openInvite(code, payload, nonce)
+
+      const { messages } = await api.fetchMessages(roomId, 0)
+      const state: RoomState = { roomId, lastSeq: 0, sender: 'chat' }
+      save(state)
+
+      const history = render(state, messages)
+      return text(
+        messages.length === 0
+          ? `Joined. The room is empty so far.
+
+Full id, in case you need it later: ${roomId}`
+          : `Joined. ${messages.length} message(s) so far:
+
+${history}
+
+Full id: ${roomId}`,
       )
     } catch (error) {
       return failure(error)

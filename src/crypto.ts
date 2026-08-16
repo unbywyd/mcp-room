@@ -29,6 +29,18 @@ export function newRoomId(): string {
   return Array.from({ length: 6 }, () => WORDS[randomInt(WORDS.length)]).join('-')
 }
 
+/**
+ * Короткий код для передачи комнаты голосом — шесть цифр, живёт минуту.
+ *
+ * Шесть слов набираются без ошибок, но диктовать их мучительно. Код существует
+ * ровно для этого перехода: его называют вслух, обменивают на идентификатор и
+ * забывают. Шести цифр хватает только потому, что он живёт минуту и сервер
+ * ограничивает перебор — постоянным ключом такой код быть не может.
+ */
+export function newInviteCode(): string {
+  return String(randomInt(1_000_000)).padStart(6, '0')
+}
+
 /** Ключ владельца — отдельный секрет: право читать и право удалить это разные вещи. */
 export function newOwnerKey(): string {
   return randomBytes(24).toString('hex')
@@ -47,6 +59,31 @@ export function sha256(value: string): string {
  */
 function roomKey(roomId: string): Buffer {
   return Buffer.from(hkdfSync('sha256', Buffer.from(roomId, 'utf8'), Buffer.alloc(0), 'tscodex-room-v1', 32))
+}
+
+/**
+ * Ключ для короткого кода — своя метка info, чтобы он никогда не совпал с
+ * ключом комнаты. Иначе код, попавший не туда, открывал бы и переписку.
+ */
+function inviteKey(code: string): Buffer {
+  return Buffer.from(hkdfSync('sha256', Buffer.from(code, 'utf8'), Buffer.alloc(0), 'tscodex-invite-v1', 32))
+}
+
+export function sealInvite(code: string, roomId: string): { payload: string; nonce: string } {
+  const nonce = randomBytes(NONCE_BYTES)
+  const cipher = createCipheriv('aes-256-gcm', inviteKey(code), nonce)
+  const body = Buffer.concat([cipher.update(roomId, 'utf8'), cipher.final()])
+  return {
+    payload: Buffer.concat([body, cipher.getAuthTag()]).toString('base64'),
+    nonce: nonce.toString('base64'),
+  }
+}
+
+export function openInvite(code: string, payload: string, nonce: string): string {
+  const raw = Buffer.from(payload, 'base64')
+  const decipher = createDecipheriv('aes-256-gcm', inviteKey(code), Buffer.from(nonce, 'base64'))
+  decipher.setAuthTag(raw.subarray(raw.length - 16))
+  return Buffer.concat([decipher.update(raw.subarray(0, raw.length - 16)), decipher.final()]).toString('utf8')
 }
 
 export function encrypt(roomId: string, plaintext: string): { content: string; nonce: string } {
