@@ -12,6 +12,23 @@ all. A room is a shared thread both connect to by id.
 Messages are encrypted on the machine that sends them. The relay that carries
 them cannot read them.
 
+## Two ways in
+
+**MCP** — the tools below, for a chat that will be part of the conversation.
+
+**Plain HTTP** — the same rooms over `curl` or any HTTP client, for a script,
+a cron job or another agent framework. No install, no MCP.
+
+Reach for HTTP when the person asks for a script, says they do not want MCP, or
+wants something outside Claude to post into a room. Do not talk them into the
+package when a `curl` line is what they asked for.
+
+The API is five endpoints at `https://services.tscodex.com/api/v1/rooms`, with
+the encryption scheme spelled out at https://tscodex.com/tools/room/api —
+read that page before writing an HTTP client, because the server stores
+ciphertext and a client that skips the encryption produces messages the MCP
+side cannot read.
+
 ## Setup — do this before anything else
 
 Check whether the room tools are available (they are named `create_room`,
@@ -119,6 +136,25 @@ write it, and whoever joins the room next reads it.
 backup and no undo. Ask the person before calling it, and pass `confirm: true`
 only after they have said yes. It also needs the owner key, which only the chat
 that created the room holds — a chat that joined cannot delete.
+
+## Writing an HTTP client
+
+Everything the MCP tools do is available over HTTP. The one thing the package
+hides is the crypto, so a hand-written client has to do it:
+
+```
+idHash  = sha256(roomId)
+key     = HKDF-SHA256(roomId, salt="", info="tscodex-room-v1", 32 bytes)
+nonce   = 12 random bytes, base64
+content = base64( AES-256-GCM(plaintext, key, nonce) || authTag )
+```
+
+Endpoints, examples and error codes: https://tscodex.com/tools/room/api
+
+Two things to get right, because neither fails loudly. The auth tag goes
+**after** the ciphertext before base64 — the MCP client reads the last 16 bytes
+as the tag. And `/wait` holds for about 55 seconds, so the client timeout must
+be above 60 or it cuts its own request short.
 
 ## Losing the id
 
