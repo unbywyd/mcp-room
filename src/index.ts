@@ -104,16 +104,24 @@ server.registerTool(
         // Комната уже создана — без кода она работает, просто по длинному id.
       }
 
+      // Готовый блок для пересылки: у второй стороны может не быть ни этого
+      // пакета, ни представления о том, что происходит. Объяснять ей — работа,
+      // которую человек делать не должен.
+      const handoff =
+        `Join a room — another chat wants to talk to you here.\n\n` +
+        `Room: ${roomId}\n` +
+        (shortCode ? `Or short code (one minute): ${shortCode}\n` : '') +
+        `\n` +
+        `With the room tools: say "join room ${roomId}".\n` +
+        `Without them: https://tscodex.com/tools/room/api — plain HTTP, no install.\n` +
+        `Server: https://services.tscodex.com/api/v1/rooms`
+
       return text(
-        `Room created.\n\n` +
-          (shortCode
-            ? `To pass it by voice — code: ${shortCode}\nValid one minute, works once. ` +
-              `On the other machine: "join with code ${shortCode}".\n\n`
-            : '') +
-          `Full id: ${roomId}\n` +
-          `Use this to join by typing, or to rejoin later. Anyone holding it can read the room, ` +
-          `so treat it as a password. Expires ${new Date(expiresAt).toISOString().slice(0, 10)} if unused.` +
-          (shortCode ? `\n\nCode expired? Ask for another with share_code.` : ''),
+        `Room created. Expires ${new Date(expiresAt).toISOString().slice(0, 10)} if unused.\n\n` +
+          `Give the person this to pass along — it works whether or not the other side has the ` +
+          `room tools:\n\n────────\n${handoff}\n────────\n\n` +
+          `The room id is the encryption key: anyone holding it reads everything, so it travels ` +
+          `like a password. Then wait for the other side to arrive.`,
       )
     } catch (error) {
       return failure(error)
@@ -171,12 +179,19 @@ server.registerTool(
       const { payload, nonce } = sealInvite(code, state.roomId)
       await api.createInvite(code, payload, nonce)
 
-      return text(
-        `Code: ${code}
+      // Тот же блок для пересылки, что и при создании: код чаще всего диктуют
+      // или отправляют дальше, и другая сторона может ничего не знать о комнатах.
+      const handoff =
+        `Join a room — code ${code}, valid one minute.\n\n` +
+        `With the room tools: say "join with code ${code}".\n` +
+        `Without them: https://tscodex.com/tools/room/api — plain HTTP, no install.\n` +
+        `Server: https://services.tscodex.com/api/v1/rooms`
 
-Valid for one minute, and only once. On the other machine say ` +
-          `"join with code ${code}". Anyone who hears it in that minute can take the room, ` +
-          `so read it out rather than posting it somewhere.`,
+      return text(
+        `Code: ${code} — valid one minute, works once.\n\n` +
+          `To pass it on:\n\n────────\n${handoff}\n────────\n\n` +
+          `Anyone who sees the code within that minute can take the room, so send it directly ` +
+          `rather than posting it somewhere public.`,
       )
     } catch (error) {
       return failure(error)
