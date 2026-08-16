@@ -1,6 +1,6 @@
 {
   "name": "@tscodex/room",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Shared rooms for Claude chats — talk across machines and pick up a conversation in a new chat. End-to-end encrypted.",
   "type": "module",
   "bin": {
