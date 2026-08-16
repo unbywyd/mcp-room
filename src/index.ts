@@ -11,6 +11,8 @@
  * модель, и от формулировки зависит, возьмётся ли она за нужный.
  */
 
+import { createRequire } from 'node:module'
+
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
@@ -19,7 +21,12 @@ import { newRoomId, newOwnerKey, encrypt, decrypt } from './crypto.js'
 import * as api from './api.js'
 import { load, save, clear, type RoomState } from './state.js'
 
-const server = new McpServer({ name: 'tscodex-room', version: '0.1.0' })
+// Версию берём из манифеста, а не строкой здесь: продублированная, она
+// разъезжается при первом же выпуске — и сервер начинает представляться
+// старым номером, хотя код в нём новый.
+const { version } = createRequire(import.meta.url)('../package.json') as { version: string }
+
+const server = new McpServer({ name: 'tscodex-room', version })
 
 /** Текст для модели, когда комната не подключена. */
 const NO_ROOM = 'Not connected to a room. Use create_room to start one, or join_room with an id.'
